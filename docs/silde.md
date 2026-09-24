@@ -137,3 +137,23 @@
 - Lưu phiên bản dataset, cách tạo nhãn, danh sách scene từng tập, seed, cấu hình bộ dò và báo cáo kiểm tra để tái lập thí nghiệm.
 - Tích hợp bước kiểm tra vào CI/CD của pipeline dữ liệu. Với chính sách chia theo scene, giao thoa scene là lỗi chặn. Similarity cao là cảnh báo cần kiểm tra, không tự động xóa ảnh chỉ dựa trên điểm embedding.
 - nuScenes-mini phù hợp thử nghiệm quy trình. Cần thêm dữ liệu và đánh giá trên bối cảnh giữ riêng trước khi kết luận về hiệu quả triển khai thực tế.
+
+---
+
+# Trang 6: Production Decision?
+
+**Mục tiêu:** Chuyển nguyên tắc kiểm tra rò rỉ thành quyết định vận hành cho toàn bộ dự án ML.
+
+## Nội dung trên slide
+
+- **Chuẩn hóa Quy trình document:** Ban hành Split Policy Guidelines cho toàn bộ dự án.
+- **Quyết định:** DEPLOY chính sách Clean Split vào MLOps pipeline CI/CD trước khi bất kỳ model nào được huấn luyện.
+- **Giới hạn (Trade-offs):** Khi re-split theo cụm chặt chẽ, số lượng sample tập Train có thể giảm 10–15%, và việc cân bằng tỷ lệ các class hiếm (rare classes) khó khăn hơn.
+- **Next Steps:** Tự động hóa việc sinh hard negative samples và tích hợp vào pipeline kiểm thử dữ liệu định kỳ (Data Unit Tests).
+
+## Ghi chú thuyết trình
+
+- Quy trình này cần được ban hành như một chính sách bắt buộc, không chỉ là một hướng dẫn thử nghiệm. Tất cả mô hình mới phải đi qua kiểm tra Clean Split trước khi được phép huấn luyện và đánh giá.
+- Việc triển khai vào CI/CD giúp chặn sớm các lỗi về rò rỉ dữ liệu, đồng thời cung cấp lịch sử kiểm tra có thể truy nguyên cho từng run dữ liệu và từng phiên bản dataset.
+- Trade-off của việc cứng hóa theo scene hoặc cluster là hiệu quả bảo vệ dữ liệu cao hơn nhưng có thể làm giảm số lượng train examples và tăng độ khó của việc cân bằng lớp hiếm.
+- Hard negative generation và Data Unit Tests là bước tiếp theo cần thiết để giảm nguy cơ đánh giá ảo và duy trì độ tin cậy của pipeline trong thời gian dài.
