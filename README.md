@@ -25,13 +25,107 @@
 ## 1. Sáu Câu Hỏi Cốt Lõi (Mandatory 6 Questions)
 
 ### Q1: Pain point cụ thể & Ai chịu hậu quả?
-- **Pain point kỹ thuật:**  
-  Trong các bài toán Computer Vision thực tế (xe tự hành, camera giám sát giao thông, robot giao hàng), dữ liệu luôn được ghi nhận dưới dạng chuỗi video liên tục (video sequences), cụm chụp liên tiếp (frame bursts), hoặc hệ thống camera đa góc nhìn (multi-camera rig).  
-  Phương pháp phân chia dữ liệu truyền thống (Naive Random Split) giả định ngây thơ rằng các mẫu là *độc lập và phân phối đồng nhất (i.i.d.)*. Do đó, các khung hình liền kề chỉ cách nhau vài mili-giây ($t \pm 0.1s$) hoặc góc nhìn đồng thời từ camera trái và phải của cùng một vật thể bị chia rẽ ngẫu nhiên vào cả tập **Train** và tập **Validation**.
-- **Ai chịu hậu quả nếu không giải quyết?**
-  - **ML Engineers:** Bị ảo tưởng bởi metric validation "đẹp giả" (Validation Accuracy / mAP đạt 96–100%), tin rằng mô hình đã hội tụ và tổng quát hóa tốt.
-  - **Đội ngũ Vận hành & Sản phẩm:** Khi triển khai mô hình ra môi trường thực tế (tuyến đường mới, góc camera mới), hiệu năng mô hình sụp đổ bất ngờ (tụt giảm 20–40% mAP), gây đình trệ sản phẩm.
-  - **Doanh nghiệp & An toàn:** Lãng phí hàng ngàn giờ tính toán GPU để train lại từ đầu; nguy cơ tai nạn nghiêm trọng trong các hệ thống an toàn tối quan trọng (ADAS / Xe tự hành không nhận diện được xe lạ trên đường).
+
+#### 1.1. Bối cảnh
+
+Trong các bài toán thị giác máy tính cho xe tự hành, ADAS hay giám sát giao thông, dữ liệu hiếm khi là những bức ảnh độc lập. Chúng được cắt ra từ:
+
+- video dashcam và chuỗi ảnh chụp liên tiếp (burst),
+- nhiều camera gắn trên cùng một xe hoặc cùng một hiện trường (multi-camera),
+- những tuyến đường (route) được đi lại nhiều lần.
+
+Cách chia dữ liệu phổ biến nhất là trộn ngẫu nhiên toàn bộ ảnh rồi cắt theo tỷ lệ (ví dụ 80/20). Cách này dựa trên giả định các mẫu **độc lập và cùng phân phối (i.i.d.)**. Với dữ liệu video và multi-camera, giả định đó **sai**: các mẫu tương quan rất mạnh với nhau theo thời gian và không gian.
+
+#### 1.2. Pain point (một câu)
+
+> Khi dataset đến từ video và hệ thống nhiều camera mà bị chia Train/Val **ngẫu nhiên theo từng frame**, các ảnh gần như trùng nhau cùng lúc nằm ở cả Train và Validation. Validation score vì thế bị thổi lên, **"đẹp giả"**, còn model thì học thuộc bối cảnh thay vì học cách tổng quát hóa. Team chỉ phát hiện ra khi model gặp tuyến đường hoặc camera mới ngoài thực tế.
+
+#### 1.3. Hai cơ chế rò rỉ nhóm tập trung
+
+##### Dạng 1 – Temporal Leakage (rò rỉ theo thời gian)
+
+Rò rỉ giữa các frame kề nhau trong cùng một chuỗi video hoặc burst shot, do chuyển động giữa các khung hình liên tiếp quá nhỏ.
+
+- Các frame liên tiếp chỉ cách nhau khoảng **150 ms**. Cảnh vật, xe cộ, ánh sáng gần như không đổi.
+- Random split có thể đưa frame `f0` vào Train và `f1` vào Val. Model đã "thấy" gần như chính xác bức ảnh đó khi train.
+- Validation không còn là "dữ liệu chưa thấy" mà là bản sao gần đúng của dữ liệu train.
+- Đặc điểm: giống nhau cả về **pixel** lẫn **ngữ nghĩa**. Perceptual hash (pHash/dHash) phần lớn bắt được.
+
+##### Dạng 2 – Multi-View Leakage (rò rỉ đa góc nhìn)
+
+Rò rỉ giữa các camera khác nhau cùng ghi hình một đối tượng hoặc khung cảnh tại cùng một thời điểm.
+
+- Nhiều camera (ví dụ `cam_front_left` và `cam_front_right`) có vùng nhìn chồng lấn, nên cùng một chiếc xe hay người đi bộ xuất hiện trong nhiều ảnh tại cùng một timestamp.
+- Nếu một góc nằm ở Val còn góc kia cùng thời điểm nằm ở Train, model đã học chính các đối tượng và bối cảnh đó, chỉ khác góc nhìn.
+- Đặc điểm: **khác nhau về pixel** (phối cảnh, ánh sáng) nhưng **chung ngữ nghĩa**. pHash bỏ sót vì khoảng cách Hamming lớn, nên phải so sánh ở mức ngữ nghĩa (embedding) hoặc dựa vào ràng buộc thời gian.
+- Đây là dạng **khó phát hiện hơn** và là chỗ phân biệt solution tốt với baseline.
+
+##### So sánh hai dạng
+
+| Tiêu chí | Temporal Leakage | Multi-View Leakage |
+|---|---|---|
+| Nguồn gốc | Frame liên tiếp trong cùng video/burst | Nhiều camera, cùng thời điểm |
+| Mức giống về pixel | Rất cao (gần trùng) | Thấp đến trung bình (khác góc nhìn) |
+| Mức giống về ngữ nghĩa | Rất cao | Rất cao |
+| pHash có bắt được không? | Phần lớn có | Thường bỏ sót |
+| Tín hiệu hữu ích để phát hiện | Hash, khoảng cách thời gian, embedding | Embedding ngữ nghĩa, cùng timestamp |
+
+#### 1.4. Vì sao đây là vấn đề nghiêm trọng
+
+- **Lỗi im lặng.** Không có error, không có warning. File vẫn đọc được, training vẫn hội tụ, dashboard vẫn đẹp. Không ai nghi ngờ một con số đẹp.
+- **Đo sai thứ cần đo.** Random split đo khả năng **ghi nhớ** (memorization), không đo khả năng **tổng quát hóa** sang tuyến đường, camera hay điều kiện mới.
+- **Làm hỏng mọi quyết định phía sau.** Chọn model, chọn checkpoint, tune hyperparameter, so sánh A/B đều dựa trên validation. Thước đo sai thì mọi quyết định đều có thể sai theo.
+- **Phát hiện muộn và tốn kém.** Thường chỉ lộ ra sau khi deploy, lúc chi phí sửa đã cao nhất.
+- **Càng nhiều data càng dễ bị.** Dataset video lớn chứa hàng chục nghìn frame gần trùng; kiểm tra thủ công là không khả thi, cần bước kiểm tra tự động.
+
+#### 1.5. Mức độ vấn đề trong benchmark của nhóm
+
+| Con số | Ý nghĩa |
+|---|---|
+| **434** | cặp ảnh rò rỉ xuyên split khi chia ngẫu nhiên (naive random split) |
+| **1.0000** | cosine similarity cao nhất giữa một ảnh Train và một ảnh Val (giống nhau tuyệt đối) |
+| **2 dạng** | temporal burst & multi-camera overlap |
+| **100% → 94,8%** | accuracy trên Validation của leaky split so với trên holdout độc lập: validation bị thổi phồng **+5,2 điểm** |
+
+Chi tiết cách dựng benchmark: xem Q2. Cách đo và so sánh với clean split: xem Q5.
+
+#### 1.6. Failure hypothesis (giả thuyết lỗi)
+
+- **H1:** Với random split theo frame, validation score cao hơn đáng kể so với score trên holdout độc lập (scene/camera hoàn toàn mới).
+- **H2:** Với split theo nhóm (group-aware split theo scene/cụm rò rỉ), khoảng chênh giữa validation và holdout thu hẹp.
+- **H3:** pHash (baseline) bắt tốt Temporal Leakage nhưng bỏ sót phần lớn Multi-View Leakage; cần phương pháp dựa trên ngữ nghĩa để bắt dạng thứ hai.
+
+> **Lưu ý bẫy của đề:** validation thấp hơn sau khi chia sạch **không** có nghĩa là model tệ hơn. Điều cần chứng minh là validation của clean split phản ánh sát hơn hiệu năng thật trên dữ liệu chưa từng thấy.
+
+#### 1.7. Ai chịu hậu quả?
+
+| Đối tượng | Hậu quả cụ thể |
+|---|---|
+| **ML Engineer / Data Scientist** | "Tự tin giả" vì validation đẹp giả. Chọn sai model, checkpoint, hyperparameter; tốn công tune những cải tiến không có thật. |
+| **Product Owner / Ban lãnh đạo** | Quyết định ship dựa trên con số ảo; cam kết chất lượng với khách hàng mà không đạt được, mất uy tín. |
+| **Người dùng cuối / an toàn** | Với ADAS hoặc giám sát, model bỏ sót người đi bộ hay phương tiện ở tuyến đường, góc camera, điều kiện ánh sáng mới. Đây là rủi ro an toàn thực sự. |
+| **Data / Labeling team** | Ngân sách gán nhãn bị phí vào hàng nghìn frame gần trùng. Khi model tụt trên thực tế lại bị yêu cầu mua thêm data mà không rõ nguyên nhân. |
+| **MLOps / Vận hành** | Model tụt hiệu năng sau khi deploy phải rollback và điều tra; tốn GPU và nhân lực để train lại. |
+| **Nghiên cứu / Benchmark** | Kết quả không tái lập được; so sánh giữa các phương pháp mất công bằng nếu mỗi bên chia split một kiểu. |
+
+#### 1.8. Câu hỏi phản biện có thể gặp
+
+- **"Leakage nhiều thì sao, model vẫn tốt mà?"** Model có thể tốt, nhưng ta không biết được vì thước đo đã hỏng. Vấn đề là mất khả năng đánh giá, không phải model chắc chắn tệ.
+- **"Sao không chia theo video là xong?"** Chia theo video xử lý được Temporal Leakage, nhưng Multi-View Leakage vẫn còn nếu các camera cùng thời điểm bị coi là các video khác nhau. Metadata cũng không phải lúc nào cũng đầy đủ hoặc đúng, nên cần phát hiện dựa trên nội dung ảnh.
+- **"Có chắc validation đang bị thổi phồng không?"** Đó là giả thuyết H1, được kiểm chứng bằng holdout độc lập (scene 14–17), không phải bằng cảm nhận.
+- **"Ground truth leak lấy từ metadata, detector có dùng metadata không?"** Metadata dùng để tạo nhãn tham chiếu. Phải nói rõ phần nào của kết quả phát hiện đến từ nội dung ảnh, phần nào đến từ ràng buộc metadata, để tránh kết quả "hiển nhiên đúng".
+
+#### 1.9. Thuật ngữ
+
+| Thuật ngữ | Giải thích |
+|---|---|
+| Data leakage (cross-split) | Thông tin từ tập đánh giá lọt vào tập train (hoặc ngược lại), làm kết quả đánh giá lạc quan sai lệch. |
+| Random split | Trộn ngẫu nhiên từng mẫu rồi chia theo tỷ lệ; chỉ đúng khi các mẫu độc lập. |
+| Group split | Chia theo nhóm (video, scene, cụm rò rỉ…) sao cho mỗi nhóm nằm trọn trong một tập. |
+| Near-duplicate | Hai ảnh gần như giống hệt nhau, chỉ khác rất ít về pixel. |
+| pHash / dHash | Perceptual hash: mã băm đại diện hình dạng tổng thể của ảnh; ảnh giống nhau về pixel có hash gần nhau. |
+| Embedding | Vector đặc trưng do mô hình học sâu tạo ra, biểu diễn ngữ nghĩa ảnh; dùng để so ảnh khác góc nhìn nhưng cùng nội dung. |
+| Holdout test | Tập kiểm thử giữ riêng hoàn toàn, không dùng để train, chỉnh ngưỡng hay chọn model. |
 
 ---
 
