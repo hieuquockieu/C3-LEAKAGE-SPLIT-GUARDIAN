@@ -1,0 +1,40 @@
+# ====================================================================
+# SplitGuardian Production Policy Configuration
+# Challenge: C3 - Leakage & Split Guardian
+# ====================================================================
+
+project:
+  name: "Leakage & Split Guardian"
+  version: "1.0.0"
+  description: "Automated Cross-Split Leakage Detection and Stratified Graph Re-Splitting"
+
+detection:
+  # Multi-tier detection methods
+  enable_phash: true
+  phash_hash_size: 16
+  phash_max_hamming_dist: 8           # Pairs with hamming <= 8 are flagged as perceptual duplicates
+
+  enable_embedding: true
+  backbone: "mobilenet_v3_small"      # Fast, lightweight CPU/GPU feature backbone
+  embedding_sim_threshold: 0.84       # Cosine similarity threshold for semantic/viewpoint duplicates
+  device: "cpu"                       # "cpu" or "cuda"
+
+  enable_metadata_graph: true
+  spatiotemporal_window_sec: 15.0     # Temporal window within same route/sequence to flag burst leak
+  same_scene_multi_camera: true       # Flag multi-camera captures of identical scene
+
+splitting:
+  target_train_ratio: 0.70
+  target_val_ratio: 0.15
+  target_test_ratio: 0.15
+  leakage_unit: "cluster"             # Unit of leakage: "pair" or "cluster"
+  group_key: "leakage_cluster_id"     # Group key used to keep atomic units isolated in one split
+  stratify_by_class: true             # Ensure class distribution preservation across splits
+  random_seed: 42
+
+ci_gate:
+  enforce_strict_separation: true
+  max_allowed_leaked_pairs: 0
+  max_allowed_cross_split_sim: 0.98   # Fail CI if any cross-split pair is a near-exact visual duplicate
+  allow_soft_warning_threshold: 0.85
+  output_report_path: "reports/ci_gate_report.json"

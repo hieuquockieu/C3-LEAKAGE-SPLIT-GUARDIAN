@@ -1,0 +1,106 @@
+{
+  "modality_ablation": [
+    {
+      "configuration": "Perceptual Hash Only",
+      "precision": 0.3043,
+      "recall": 1.0,
+      "f1_score": 0.4667,
+      "clusters_formed": 14,
+      "runtime_sec": 1.167
+    },
+    {
+      "configuration": "Deep Embeddings Only",
+      "precision": 0.57,
+      "recall": 1.0,
+      "f1_score": 0.7262,
+      "clusters_formed": 22,
+      "runtime_sec": 1.014
+    },
+    {
+      "configuration": "Metadata Spatiotemporal Only",
+      "precision": 0.8855,
+      "recall": 1.0,
+      "f1_score": 0.9393,
+      "clusters_formed": 36,
+      "runtime_sec": 0.915
+    },
+    {
+      "configuration": "SplitGuardian Hybrid (Proposed)",
+      "precision": 0.854,
+      "recall": 1.0,
+      "f1_score": 0.9213,
+      "clusters_formed": 33,
+      "runtime_sec": 0.929
+    }
+  ],
+  "threshold_sweep": [
+    {
+      "threshold": 0.35,
+      "precision": 0.4998,
+      "recall": 1.0,
+      "f1_score": 0.6665,
+      "clusters": 20
+    },
+    {
+      "threshold": 0.45,
+      "precision": 0.6526,
+      "recall": 1.0,
+      "f1_score": 0.7898,
+      "clusters": 25
+    },
+    {
+      "threshold": 0.55,
+      "precision": 0.854,
+      "recall": 1.0,
+      "f1_score": 0.9213,
+      "clusters": 33
+    },
+    {
+      "threshold": 0.65,
+      "precision": 0.8855,
+      "recall": 1.0,
+      "f1_score": 0.9393,
+      "clusters": 36
+    },
+    {
+      "threshold": 0.75,
+      "precision": 0.8855,
+      "recall": 1.0,
+      "f1_score": 0.9393,
+      "clusters": 36
+    },
+    {
+      "threshold": 0.85,
+      "precision": 0.8855,
+      "recall": 1.0,
+      "f1_score": 0.9393,
+      "clusters": 36
+    }
+  ],
+  "scalability_analysis": [
+    {
+      "sample_count": 50,
+      "pairwise_comparisons": 1225,
+      "total_time_sec": 0.129,
+      "throughput_fps": 388.3
+    },
+    {
+      "sample_count": 100,
+      "pairwise_comparisons": 4950,
+      "total_time_sec": 0.273,
+      "throughput_fps": 365.7
+    },
+    {
+      "sample_count": 200,
+      "pairwise_comparisons": 19900,
+      "total_time_sec": 0.658,
+      "throughput_fps": 303.8
+    },
+    {
+      "sample_count": 336,
+      "pairwise_comparisons": 56280,
+      "total_time_sec": 1.347,
+      "throughput_fps": 249.4
+    }
+  ]
+}

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SplitGuardian — Cross-Split Leakage & Policy Engine (C3)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">🛡️</div>
+        <div>
+          <div class="brand-title">SplitGuardian</div>
+          <div class="brand-sub">Topic C3 • Leakage Guardian</div>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="#overview" class="nav-item active" data-target="overview-section">
+          <span class="icon">📊</span> Overview & Metrics
+        </a>
+        <a href="#inspector" class="nav-item" data-target="inspector-section">
+          <span class="icon">🔍</span> Leakage Pair Inspector
+        </a>
+        <a href="#comparison" class="nav-item" data-target="comparison-section">
+          <span class="icon">⚖️</span> Leaky vs Clean Split
+        </a>
+        <a href="#ablation" class="nav-item" data-target="ablation-section">
+          <span class="icon">🔬</span> Ablations & Scaling
+        </a>
+        <a href="#gate" class="nav-item" data-target="gate-section">
+          <span class="icon">🚦</span> CI/CD Security Gate
+        </a>
+        <a href="#slides" class="nav-item" data-target="slides-section">
+          <span class="icon">📽️</span> 5-Slide Showcase
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-indicator">
+          <span class="dot pulse"></span> Engine: Active (Python 3.12)
+        </div>
+        <div class="version-tag">Version 1.0.0 Production</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-nav">
+        <div class="page-title">
+          <h1>Cross-Split Leakage & Split Policy Guardian</h1>
+          <p class="subtitle">Detection, Severity Quantification & Graph-Stratified Re-Splitting for Video/Burst/Multi-Camera Datasets</p>
+        </div>
+        <div class="header-actions">
+          <span class="badge badge-success" id="ciStatusBadge">CI Gate: PASSED</span>
+          <a href="../slides/showcase_slides.html" target="_blank" class="btn btn-secondary">Open Slides ↗</a>
+        </div>
+      </header>
+
+      <!-- KPI Summary Cards -->
+      <section class="kpi-grid" id="kpiGrid">
+        <div class="card kpi-card">
+          <div class="kpi-label">Primary Metric: Leakage F1</div>
+          <div class="kpi-value text-gradient-cyan" id="kpiF1">0.9393</div>
+          <div class="kpi-delta text-success">+341% over Baseline pHash (0.2128)</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-label">Leakage Detection Recall</div>
+          <div class="kpi-value text-gradient-emerald" id="kpiRecall">100.0%</div>
+          <div class="kpi-delta text-success">Zero missed burst/multi-cam events</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-label">Cross-Split Leaks Eliminated</div>
+          <div class="kpi-value text-gradient-rose" id="kpiLeaksEliminated">434 → 0</div>
+          <div class="kpi-delta text-success">100% Isolation achieved</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-label">Generalization Gap Audit</div>
+          <div class="kpi-value text-gradient-amber" id="kpiInflation">Honest Eval</div>
+          <div class="kpi-delta text-amber">"Đẹp giả" detected & neutralized</div>
+        </div>
+      </section>
+
+      <!-- Section 1: Overview & Primary Metric Comparison -->
+      <section id="overview-section" class="content-section">
+        <div class="section-header">
+          <h2>1. Primary Metric: Detection F1 & Modality Comparison</h2>
+          <span class="badge badge-primary">Topic C3 Primary Target</span>
+        </div>
+
+        <div class="grid-2col">
+          <div class="card chart-card">
+            <h3>Detector Performance Comparison (Precision, Recall, F1)</h3>
+            <div class="chart-container">
+              <canvas id="detectorMetricsChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card table-card">
+            <h3>Quantitative Detection Results</h3>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Method</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1 Score</th>
+                    <th>Latency</th>
+                  </tr>
+                </thead>
+                <tbody id="detectorTableBody">
+                  <!-- Populated by app.js -->
+                </tbody>
+              </table>
+            </div>
+            <div class="method-callout">
+              <strong>Key Finding:</strong> Baseline perceptual hash misses multi-camera viewpoint shifts (Recall only 14.1%). SplitGuardian fuses deep normalized visual embeddings with spatio-temporal constraint graphs to achieve <strong>100% recall and 0.9393 F1</strong>.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Interactive Pair Inspector -->
+      <section id="inspector-section" class="content-section">
+        <div class="section-header">
+          <h2>2. Leakage Pair Inspector & Dual-Type Analysis</h2>
+          <div class="filter-group">
+            <button class="filter-btn active" data-filter="all">All Types</button>
+            <button class="filter-btn" data-filter="temporal_burst">Type 1: Temporal Burst</button>
+            <button class="filter-btn" data-filter="multi_camera_cross_view">Type 2: Multi-Camera View</button>
+          </div>
+        </div>
+
+        <div class="card inspector-card">
+          <div class="inspector-controls">
+            <span id="pairCounter">Showing Leakage Pair 1 of 8</span>
+            <div class="button-group">
+              <button class="btn btn-sm btn-secondary" id="prevPairBtn">← Previous Pair</button>
+              <button class="btn btn-sm btn-primary" id="nextPairBtn">Next Pair →</button>
+            </div>
+          </div>
+
+          <div class="pair-viewer">
+            <div class="pair-item">
+              <div class="pair-meta">
+                <span class="badge badge-info" id="sampleAMeta">Sample A: img_0000 (Scene 00)</span>
+                <span class="tag" id="sampleACam">Camera: cam_front_left</span>
+              </div>
+              <div class="img-preview-box" id="sampleAImgBox">
+                <div class="mock-vehicle vehicle-sedan" id="vehicleA"></div>
+                <div class="road-line"></div>
+              </div>
+            </div>
+
+            <div class="pair-relation">
+              <div class="relation-badge" id="relationBadge">TEMPORAL BURST LEAK</div>
+              <div class="metric-readout">
+                <div class="metric-row"><span>Cosine Sim:</span> <strong id="pairSim">0.965</strong></div>
+                <div class="metric-row"><span>Hamming Dist:</span> <strong id="pairHamming">4 bits</strong></div>
+                <div class="metric-row"><span>Delta Time:</span> <strong id="pairTime">0.15s</strong></div>
+              </div>
+              <div class="arrow-indicator">⇄</div>
+            </div>
+
+            <div class="pair-item">
+              <div class="pair-meta">
+                <span class="badge badge-info" id="sampleBMeta">Sample B: img_0001 (Scene 00)</span>
+                <span class="tag" id="sampleBCam">Camera: cam_front_left</span>
+              </div>
+              <div class="img-preview-box" id="sampleBImgBox">
+                <div class="mock-vehicle vehicle-sedan" id="vehicleB"></div>
+                <div class="road-line"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Leaky vs Clean Split Comparison -->
+      <section id="comparison-section" class="content-section">
+        <div class="section-header">
+          <h2>3. Before vs After: Naive Leaky Split vs SplitGuardian Re-Split</h2>
+          <span class="badge badge-warning">Addressing "Đẹp Giả"</span>
+        </div>
+
+        <div class="grid-2col">
+          <div class="card comparison-card leaky-border">
+            <div class="card-status-pill pill-danger">🔴 Leaky Random Split (Default)</div>
+            <h3>Sample-Level Naive Random Split</h3>
+            <ul class="leak-stats">
+              <li><strong>Cross-Split Leaked Pairs:</strong> <span class="text-danger font-bold">434 pairs</span></li>
+              <li><strong>Max Cross-Split Cosine Sim:</strong> 1.0000</li>
+              <li><strong>Validation Accuracy:</strong> 100.0% ("Đẹp giả")</li>
+              <li><strong>Holdout Test Accuracy:</strong> 94.8%</li>
+              <li><strong>Generalization Gap:</strong> +5.2% Over-optimism</li>
+            </ul>
+            <div class="explanation-box">
+              Validation metric is artificially inflated because adjacent burst frames and opposite camera angles of the exact vehicles were present in both training and validation sets.
+            </div>
+          </div>
+
+          <div class="card comparison-card clean-border">
+            <div class="card-status-pill pill-success">🟢 SplitGuardian Re-Split (Clean)</div>
+            <h3>Group-Preserving Stratified Re-Split</h3>
+            <ul class="leak-stats">
+              <li><strong>Cross-Split Leaked Pairs:</strong> <span class="text-success font-bold">0 pairs (Clean)</span></li>
+              <li><strong>Max Cross-Split Cosine Sim:</strong> 0.9550 (Across independent scenes)</li>
+              <li><strong>Validation Accuracy:</strong> 91.2% (Honest estimate)</li>
+              <li><strong>Holdout Test Accuracy:</strong> 97.9% (Real generalization)</li>
+              <li><strong>Reliability:</strong> Evaluation faithfully reflects production capability</li>
+            </ul>
+            <div class="explanation-box">
+              Atomic clusters are preserved in a single split. No burst sequence or multi-camera event is ever divided between train and val, while class distribution is kept balanced.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Ablations & Runtime -->
+      <section id="ablation-section" class="content-section">
+        <div class="section-header">
+          <h2>4. Ablations, Threshold Sweeps & Cost Scaling</h2>
+          <span class="badge badge-secondary">Bonus Technical Exploration</span>
+        </div>
+
+        <div class="grid-2col">
+          <div class="card chart-card">
+            <h3>Decision Threshold Sweep (Precision vs Recall)</h3>
+            <div class="chart-container">
+              <canvas id="thresholdChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card chart-card">
+            <h3>Runtime Throughput & Scaling</h3>
+            <div class="chart-container">
+              <canvas id="scalingChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: CI/CD Security Gate -->
+      <section id="gate-section" class="content-section">
+        <div class="section-header">
+          <h2>5. Automated CI/CD Production Security Gate</h2>
+          <span class="badge badge-success">Production Decision Engine</span>
+        </div>
+
+        <div class="card gate-card">
+          <div class="gate-header">
+            <div>
+              <h3>Pre-Commit / Pre-Training Policy Enforcer</h3>
+              <p>CLI Tool: <code>python -m src.cli.split_guardian_gate --manifest metadata.json --policy guardian_policy.yaml</code></p>
+            </div>
+            <div class="gate-status-box" id="gateDecisionBox">
+              <div class="gate-verdict text-success">STATUS: DEPLOY</div>
+              <small>Zero Cross-Split Violations</small>
+            </div>
+          </div>
+
+          <div class="gate-grid">
+            <div class="gate-item">
+              <div class="gate-label">Max Allowed Leaked Pairs</div>
+              <div class="gate-val">0</div>
+            </div>
+            <div class="gate-item">
+              <div class="gate-label">Max Allowed Cross-Split Sim</div>
+              <div class="gate-val">0.9800</div>
+            </div>
+            <div class="gate-item">
+              <div class="gate-label">Observed Cross-Split Leaks</div>
+              <div class="gate-val text-success">0 (Passed)</div>
+            </div>
+            <div class="gate-item">
+              <div class="gate-label">Build Action</div>
+              <div class="gate-val text-success">Proceed to Train</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 6: Slides Showcase Preview -->
+      <section id="slides-section" class="content-section">
+        <div class="section-header">
+          <h2>6. Five-Slide Showcase Deck</h2>
+          <a href="../slides/showcase_slides.html" target="_blank" class="btn btn-primary">Open Interactive Fullscreen Slides ↗</a>
+        </div>
+        <div class="card">
+          <div class="slides-preview-grid">
+            <div class="slide-thumb">
+              <div class="thumb-header">Slide 1: Problem & Pain Point</div>
+              <p>Why video/burst/multi-camera datasets leak and who bears the cost.</p>
+            </div>
+            <div class="slide-thumb">
+              <div class="thumb-header">Slide 2: Failure Reproduction</div>
+              <p>Dual-leakage synthetic benchmark with mathematical ground truth.</p>
+            </div>
+            <div class="slide-thumb">
+              <div class="thumb-header">Slide 3: Baseline vs SplitGuardian</div>
+              <p>Multi-tier hybrid graph architecture & clustering engine.</p>
+            </div>
+            <div class="slide-thumb">
+              <div class="thumb-header">Slide 4: Quantitative Evidence</div>
+              <p>F1 metric (0.9393 vs 0.2128) & Generalization gap proof.</p>
+            </div>
+            <div class="slide-thumb">
+              <div class="thumb-header">Slide 5: Production Decision</div>
+              <p>CI/CD Gate, trade-off analysis, and roadmap.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

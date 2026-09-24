@@ -1,0 +1,23 @@
+{
+  "status": "PASSED",
+  "decision": "DEPLOY",
+  "audit": {
+    "num_train_samples": 256,
+    "num_val_samples": 80,
+    "cross_leaked_pair_count": 0,
+    "cross_leak_by_type": {
+      "temporal_burst": 0,
+      "multi_camera_cross_view": 0
+    },
+    "cross_split_similarity": {
+      "mean_cosine_sim": -0.0259,
+      "max_cosine_sim": 0.955,
+      "p95_cosine_sim": 0.6489
+    },
+    "has_leakage": false
+  },
+  "policy_thresholds": {
+    "max_allowed_cross_split_sim": 0.98,
+    "max_allowed_leaked_pairs": 0
+  }
+}
