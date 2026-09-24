@@ -58,8 +58,9 @@
 - **Giới hạn & Bước tiếp theo:**
   - Thiết lập Human-in-the-loop review đối với các cặp có độ tương đồng mấp mé ngưỡng $0.92-0.96$.
   - Mở rộng kiến trúc xử lý dạng streaming cho các luồng ingestion dữ liệu lớn theo thời gian thực.
+---
 
-### Slide 6: Production Decision?
+## Slide 6: Production Decision?
 
 - Chuẩn hóa Quy trình document: Ban hành Split Policy Guidelines cho toàn bộ dự án.
 - Quyết định: DEPLOY chính sách Clean Split vào MLOps pipeline CI/CD trước khi bất kỳ model nào được huấn luyện.
