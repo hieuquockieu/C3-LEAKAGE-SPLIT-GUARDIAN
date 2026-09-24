@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C3 – Leakage &amp; Split Guardian</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:#0c1222;overflow:hidden;font-family:'Be Vietnam Pro',Arial,sans-serif}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center center}
+.slide{position:absolute;inset:0;width:1920px;height:1080px;display:none!important;overflow:hidden}
+.slide.active{display:flex!important}
+.slide[style*="display:grid"].active{display:grid!important}
+.slide p,.slide h1,.slide h2,.slide h3{margin:0}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:.35em .6em;border-bottom:1px solid #d6d2c7;vertical-align:top}
+th{font-weight:700}
+aside{display:none}
+#notes{position:fixed;left:0;right:0;bottom:0;max-height:35vh;overflow:auto;background:#111a2e;color:#e6e9ef;font:15px/1.5 Arial,sans-serif;padding:14px 20px;white-space:pre-wrap;display:none;z-index:5}
+#bar{position:fixed;right:14px;bottom:10px;color:#9aa6bc;font:13px Arial,sans-serif;z-index:6}
+</style></head><body>
+<div id="stage">
+<section class="slide" id="title" data-transition="fade" style="background:#16213A; color:#F1EEE6; font-family:'Be Vietnam Pro', Arial, sans-serif; padding:128px; display:flex; flex-direction:column; justify-content:space-between">
+  <div style="position:absolute; left:0px; top:0px; width:24px; height:1080px; background:#F2A65A"></div>
+  <p style="font-size:26px; font-weight:600; letter-spacing:4px; text-transform:uppercase; color:#F2A65A">Open Lab Challenge · Data Pipeline &amp; Governance · Ngày 07</p>
+  <div style="display:flex; flex-direction:column; gap:28px">
+    <p style="font-size:40px; font-weight:600; color:#6FC2B4; font-family:'JetBrains Mono', 'Courier New', monospace">C3</p>
+    <h1 style="font-size:124px; font-weight:700; line-height:1.05; color:#F1EEE6">Leakage &amp; Split Guardian</h1>
+    <p style="font-size:40px; line-height:1.35; color:#C9D1DD; width:1400px">Phát hiện rò rỉ dữ liệu xuyên tập và xây dựng chính sách chia Train / Validation đáng tin cậy</p>
+  </div>
+  <div style="display:flex; flex-direction:row; justify-content:space-between; align-items:end; gap:48px">
+    <p style="font-size:34px; font-style:italic; color:#F2A65A">Validation score có đang "đẹp giả"?</p>
+    <div style="display:flex; flex-direction:column; gap:6px">
+      <p style="font-size:28px; font-weight:600; color:#F1EEE6; text-align:right">Nhóm [__] · Lớp [__]</p>
+      <p style="font-size:24px; color:#9AA6BC; text-align:right">Nhóm trưởng: Nguyễn Hoài Thanh · 7 thành viên</p>
+    </div>
+  </div>
+  <aside>Giới thiệu nhóm và đề tài C3 trong khoảng 10 giây, rồi đặt câu hỏi mở đầu: validation score của chúng ta có đang "đẹp giả" không? Chuyển ngay sang slide Pain point.</aside>
+</section>
+
+<section class="slide" id="team" data-transition="fade" style="background:#F6F5F1; color:#16213A; font-family:'Be Vietnam Pro', Arial, sans-serif; padding:96px 128px 150px; display:flex; flex-direction:column; gap:28px">
+  <p style="font-size:24px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:#B34A14">C3 · Leakage &amp; Split Guardian</p>
+  <h2 style="font-size:60px; font-weight:700; line-height:1.1; color:#16213A">Thành viên nhóm</h2>
+  <div style="display:flex; flex-direction:row; gap:28px; align-items:center; background:#16213A; border-radius:14px; padding:28px 36px">
+    <span style="width:52px; height:52px; color:#F2A65A;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:700">★</span>
+    <div style="flex:1; display:flex; flex-direction:column; gap:6px">
+      <h3 style="font-size:36px; font-weight:700; color:#F1EEE6">Nguyễn Hoài Thanh</h3>
+      <p style="font-size:24px; color:#C9D1DD">26ai.thanhnh@vinuni.edu.vn</p>
+    </div>
+    <p style="font-size:24px; font-weight:600; color:#16213A; background:#F2A65A; border-radius:999px; padding:10px 24px">Nhóm trưởng</p>
+  </div>
+  <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px">
+    <div style="display:flex; flex-direction:column; gap:6px; background:#FDFCF9; border:1px solid #DEDBD2; border-left:6px solid #1F7A6E; border-radius:14px; padding:24px 28px">
+      <h3 style="font-size:30px; font-weight:700">Trần An Hạ</h3>
+      <p style="font-size:24px; color:#5B6478">26ai.hata@vinuni.edu.vn</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px; background:#FDFCF9; border:1px solid #DEDBD2; border-left:6px solid #1F7A6E; border-radius:14px; padding:24px 28px">
+      <h3 style="font-size:30px; font-weight:700">Nguyễn Hữu Dũng</h3>
+      <p style="font-size:24px; color:#5B6478">26ai.dungnh@vinuni.edu.vn</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px; background:#FDFCF9; border:1px solid #DEDBD2; border-left:6px solid #1F7A6E; border-radius:14px; padding:24px 28px">
+      <h3 style="font-size:30px; font-weight:700">Hoàng Tiến Dũng</h3>
+      <p style="font-size:24px; color:#5B6478">26ai.dunght@vinuni.edu.vn</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px; background:#FDFCF9; border:1px solid #DEDBD2; border-left:6px solid #1F7A6E; border-radius:14px; padding:24px 28px">
+      <h3 style="font-size:30px; font-weight:700">Nguyễn Minh Tú</h3>
+      <p style="font-size:24px; color:#5B6478">26ai.tunm2@vinuni.edu.vn</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px; background:#FDFCF9; border:1px solid #DEDBD2; border-left:6px solid #1F7A6E; border-radius:14px; padding:24px 28px">
+      <h3 style="font-size:30px; font-weight:700">Kiều Quốc Hiếu</h3>
+      <p style="font-size:24px; color:#5B6478">26ai.hieukq@vinuni.edu.vn</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px; background:#FDFCF9; border:1px solid #DEDBD2; border-left:6px solid #1F7A6E; border-radius:14px; padding:24px 28px">
+      <h3 style="font-size:30px; font-weight:700">Ngô Xuân Nam</h3>
+      <p style="font-size:24px; color:#5B6478">26ai.namnx@vinuni.edu.vn</p>
+    </div>
+  </div>
+  <div style="position:absolute; left:128px; right:128px; bottom:64px; display:flex; flex-direction:row; justify-content:space-between">
+    <p style="font-size:24px; color:#5B6478">C3 · Leakage &amp; Split Guardian</p>
+    <p style="font-size:24px; color:#5B6478">7 thành viên</p>
+  </div>
+  <aside>Giới thiệu nhanh nhóm 7 thành viên, nhóm trưởng Nguyễn Hoài Thanh, rồi chuyển sang slide Pain point.</aside>
+</section>
+
+<section class="slide" id="s1-pain" data-transition="fade" style="background:#F6F5F1; color:#16213A; font-family:'Be Vietnam Pro', Arial, sans-serif; padding:96px 128px 150px; display:flex; flex-direction:column; gap:24px">
+  <p style="font-size:24px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:#B34A14">Câu 1 · Pain point &amp; cái giá của việc bỏ qua</p>
+  <h2 style="font-size:60px; font-weight:700; line-height:1.1; color:#16213A">"Sát thủ vô hình" khi triển khai: rò rỉ dữ liệu xuyên tập</h2>
+  <div style="display:flex; flex-direction:row; gap:32px">
+    <div style="flex:1; display:flex; flex-direction:column; gap:14px; background:#FDFCF9; border:1px solid #DEDBD2; border-left:6px solid #B34A14; border-radius:14px; padding:28px 32px">
+      <h3 style="font-size:30px; font-weight:700">Pain point cốt lõi</h3>
+      <p style="font-size:24px; line-height:1.45; color:#45506A">Dữ liệu thị giác thực tế (xe tự hành, giám sát giao thông, hệ thống nhiều camera) đến từ <b>chuỗi video liên tục, tuyến đường và cụm camera đa góc</b>.</p>
+      <p style="font-size:24px; line-height:1.45; color:#45506A">Random split giả định các mẫu độc lập (i.i.d.). Thực tế, frame liền kề và các góc camera cùng quay một chiếc xe bị rải vào <b>cả Train lẫn Validation</b>.</p>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:14px; background:#FDFCF9; border:1px solid #DEDBD2; border-left:6px solid #C98A12; border-radius:14px; padding:28px 32px">
+      <h3 style="font-size:30px; font-weight:700">Ai chịu hậu quả?</h3>
+      <p style="font-size:24px; line-height:1.45; color:#45506A"><b>ML Engineer:</b> "tự tin giả" vì validation "đẹp giả", tưởng model đã tổng quát hóa.</p>
+      <p style="font-size:24px; line-height:1.45; color:#45506A"><b>Product &amp; vận hành:</b> ship model rồi tụt hiệu năng trên tuyến đường, camera chưa gặp.</p>
+      <p style="font-size:24px; line-height:1.45; color:#45506A"><b>Kinh doanh &amp; an toàn:</b> tốn GPU train lại, trễ phát hành, rủi ro bỏ sót vật thể khi xe chạy thật.</p>
+    </div>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:24px">
+    <div style="flex:1; display:flex; flex-direction:column; gap:6px; background:#16213A; border-radius:14px; padding:24px 28px">
+      <p style="font-size:64px; font-weight:700; line-height:1.1; color:#F2A65A">434</p>
+      <p style="font-size:24px; color:#C9D1DD">cặp rò rỉ xuyên split trong random split</p>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:6px; background:#16213A; border-radius:14px; padding:24px 28px">
+      <p style="font-size:64px; font-weight:700; line-height:1.1; color:#F2A65A">1.0000</p>
+      <p style="font-size:24px; color:#C9D1DD">cosine similarity cao nhất giữa Train và Val</p>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:6px; background:#16213A; border-radius:14px; padding:24px 28px">
+      <p style="font-size:64px; font-weight:700; line-height:1.1; color:#6FC2B4">2 dạng</p>
+      <p style="font-size:24px; color:#C9D1DD">temporal burst &amp; multi-camera overlap</p>
+    </div>
+  </div>
+  <div style="position:absolute; left:128px; right:128px; bottom:64px; display:flex; flex-direction:row; justify-content:space-between">
+    <p style="font-size:24px; color:#5B6478">C3 · Leakage &amp; Split Guardian</p>
+    <p style="font-size:24px; color:#5B6478">1 / 5</p>
+  </div>
+  <aside>Mở đầu bằng một câu: validation của chúng ta có thể đang đo khả năng học thuộc, không phải khả năng tổng quát hóa.
+Nhấn mạnh đây là lỗi im lặng: không có error, training vẫn chạy, dashboard vẫn đẹp.
+Ba con số: 434 cặp ảnh bị rò rỉ khi chia ngẫu nhiên; có cặp giống nhau tuyệt đối (cosine 1.0000); hai dạng rò rỉ nhóm tập trung là temporal burst và multi-camera overlap.
+Hậu quả chi tiết: ML engineer chọn sai model; product ship model tụt hiệu năng trên tuyến đường/camera mới; business tốn chi phí train lại và có rủi ro an toàn do bỏ sót vật thể (false negative).</aside>
+</section>
+
+<section class="slide" id="s2-detector" data-transition="fade" style="background:#F6F5F1; color:#16213A; font-family:'Be Vietnam Pro', Arial, sans-serif; padding:96px 128px 150px; display:flex; flex-direction:column; gap:24px">
+  <p style="font-size:24px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:#B34A14">Câu 2 · Tái hiện lỗi &amp; thiết kế benchmark</p>
+  <h2 style="font-size:60px; font-weight:700; line-height:1.1; color:#16213A">Benchmark hai dạng rò rỉ, có ground truth manifest</h2>
+  <div style="display:flex; flex-direction:row; gap:32px">
+    <div style="flex:1; display:flex; flex-direction:column; gap:12px; background:#FDFCF9; border:1px solid #DEDBD2; border-top:6px solid #B34A14; border-radius:14px; padding:26px 32px">
+      <h3 style="font-size:30px; font-weight:700"><span style="color:#B34A14">Dạng 1 ·</span> Temporal burst overlap</h3>
+      <p style="font-size:24px; line-height:1.4; color:#45506A">Frame liên tiếp cách nhau ~150 ms, cùng một camera. Chỉ khác chút rung pixel, nên f0 ở Train và f1 ở Val khiến model học vẹt.</p>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:12px; background:#FDFCF9; border:1px solid #DEDBD2; border-top:6px solid #B34A14; border-radius:14px; padding:26px 32px">
+      <h3 style="font-size:30px; font-weight:700"><span style="color:#B34A14">Dạng 2 ·</span> Multi-camera overlap</h3>
+      <p style="font-size:24px; line-height:1.4; color:#45506A">Nhiều camera cùng lúc ghi một sự kiện (cam_front_left / cam_front_right). Khác phối cảnh, ánh sáng nên pHash bỏ sót.</p>
+    </div>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:32px">
+    <div style="flex:1; display:flex; flex-direction:column; gap:12px">
+      <p style="font-size:24px; font-weight:600">Nhãn tham chiếu theo metadata, xét trên từng cặp Train–Val</p>
+      <table style="font-size:24px; color:#16213A; font-family:'Be Vietnam Pro', Arial, sans-serif">
+        <tr style="background:#E7E4DB"><th style="width:32%">Loại cặp</th><th style="width:68%">Quy tắc</th></tr>
+        <tr><td>Temporal (GT = 1)</td><td>Cùng scene, cùng camera, Δt nhỏ</td></tr>
+        <tr><td>Multi-view (GT = 1)</td><td>Cùng thời điểm, khác camera</td></tr>
+        <tr><td>Cặp âm (GT = 0)</td><td>Khác scene, đã kiểm tra không trùng bối cảnh</td></tr>
+      </table>
+    </div>
+    <div style="width:680px; display:flex; flex-direction:column; gap:10px; background:#E6F1EF; border-left:6px solid #1F7A6E; border-radius:14px; padding:26px 30px">
+      <div style="display:flex; flex-direction:row; gap:16px; align-items:center">
+        <span style="width:44px; height:44px; color:#1F7A6E;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:700">🔒</span>
+        <h3 style="font-size:30px; font-weight:700; color:#16213A">Holdout độc lập</h3>
+      </div>
+      <p style="font-size:24px; line-height:1.45; color:#45506A">Giữ riêng <b>scene 14–17</b> (<b>96 ảnh</b>) làm Test chưa từng thấy. Không dùng để train, chỉnh ngưỡng hay chọn model: đây là trọng tài kiểm tra điểm validation thật hay "đẹp giả".</p>
+    </div>
+  </div>
+  <div style="position:absolute; left:128px; right:128px; bottom:64px; display:flex; flex-direction:row; justify-content:space-between">
+    <p style="font-size:24px; color:#5B6478">C3 · Leakage &amp; Split Guardian</p>
+    <p style="font-size:24px; color:#5B6478">2 / 5</p>
+  </div>
+  <aside>Giải thích cách nhóm tái hiện lỗi: dựng benchmark có manifest ground truth cho từng cặp ảnh Train–Val (leak hoặc không leak) theo hai dạng.
+Dạng 1 – temporal: frame cách nhau khoảng 150 ms nên gần như trùng nhau; pHash bắt được phần lớn.
+Dạng 2 – multi-camera: cùng sự kiện nhưng khác góc nhìn; pHash bỏ sót vì khoảng cách Hamming lớn, đây là lý do cần embedding ngữ nghĩa.
+Nhãn tham chiếu là nhãn đại diện theo metadata (metadata proxy). Cùng thời điểm chưa bảo đảm hai ảnh trùng nội dung thị giác; cặp chưa đủ cơ sở gán nhãn để ở trạng thái "chưa xác định", không tự động tính là âm.
+Holdout: scene 14–17 (96 ảnh) không tham gia train, không dùng để chỉnh ngưỡng hay chọn model.
+Chuẩn bị Q&A: detector không dùng chính quy tắc metadata tạo nhãn rồi coi điểm số đó là bằng chứng nhận diện nội dung ảnh.</aside>
+</section>
+
+<section class="slide" id="s3-split" data-transition="fade" style="background:#F6F5F1; color:#16213A; font-family:'Be Vietnam Pro', Arial, sans-serif; padding:96px 128px 150px; display:flex; flex-direction:column; gap:24px">
+  <p style="font-size:24px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:#B34A14">Câu 3 &amp; 4 · Baseline thất bại &amp; giải pháp SplitGuardian</p>
+  <h2 style="font-size:60px; font-weight:700; line-height:1.1; color:#16213A">Kiến trúc: Hybrid Multimodal Graph Guardian</h2>
+  <div style="display:flex; flex-direction:row; gap:32px">
+    <div style="width:640px; display:flex; flex-direction:column; gap:14px; background:#FDFCF9; border:1px solid #DEDBD2; border-left:6px solid #B34A14; border-radius:14px; padding:28px 32px">
+      <h3 style="font-size:30px; font-weight:700">Vì sao baseline thất bại</h3>
+      <p style="font-size:24px; line-height:1.45; color:#45506A"><b>Baseline 1 – Random split:</b> không biết gì về quan hệ thời gian hay không gian, tạo ra 434 cặp rò rỉ.</p>
+      <p style="font-size:24px; line-height:1.45; color:#45506A"><b>Baseline 2 – Perceptual hash:</b> bắt được ảnh trùng gần tuyệt đối nhưng bỏ sót góc camera khác. Recall 14,1%, F1 0,2128.</p>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:12px; background:#FDFCF9; border:1px solid #DEDBD2; border-left:6px solid #1F7A6E; border-radius:14px; padding:28px 32px">
+      <h3 style="font-size:30px; font-weight:700">Kiến trúc SplitGuardian</h3>
+      <p style="font-size:24px; line-height:1.4; color:#45506A"><span style="color:#1F7A6E"><b>01</b></span>  <b>Trích xuất đặc trưng nhiều tầng:</b> dHash + embedding CNN 256 chiều, chuẩn hóa zero-mean.</p>
+      <p style="font-size:24px; line-height:1.4; color:#45506A"><span style="color:#1F7A6E"><b>02</b></span>  <b>Đồ thị liên kết không–thời gian:</b> kết hợp độ giống hình ảnh với ràng buộc route, camera, timestamp.</p>
+      <p style="font-size:24px; line-height:1.4; color:#45506A"><span style="color:#1F7A6E"><b>03</b></span>  <b>Tách connected component:</b> tìm các cụm rò rỉ nguyên tử.</p>
+      <p style="font-size:24px; line-height:1.4; color:#45506A"><span style="color:#1F7A6E"><b>04</b></span>  <b>Stratified group re-splitter:</b> xếp nguyên cụm vào từng tập, các split tách rời 100% mà vẫn giữ cân bằng lớp.</p>
+    </div>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px; align-items:center; background:#16213A; border-radius:14px; padding:26px 36px">
+    <p style="font-size:64px; font-weight:700; line-height:1.1; color:#6FC2B4; white-space:nowrap">F1 0,9393</p>
+    <p style="flex:1; font-size:26px; line-height:1.4; color:#C9D1DD">Recall 100% · so với baseline pHash F1 0,2128 → <span style="color:#F2A65A"><b>cải thiện +341%</b></span></p>
+  </div>
+  <div style="position:absolute; left:128px; right:128px; bottom:64px; display:flex; flex-direction:row; justify-content:space-between">
+    <p style="font-size:24px; color:#5B6478">C3 · Leakage &amp; Split Guardian</p>
+    <p style="font-size:24px; color:#5B6478">3 / 5</p>
+  </div>
+  <aside>Câu 3 – Baseline: random split tạo ra 434 cặp rò rỉ; pHash chỉ bắt được ảnh gần trùng tuyệt đối nên recall chỉ 14,1% và F1 0,2128.
+Câu 4 – Solution gồm 4 bước: (1) dHash kết hợp embedding CNN 256 chiều đã chuẩn hóa; (2) dựng đồ thị: đỉnh là ảnh, cạnh là cặp giống nhau về hình ảnh, có kết hợp ràng buộc route/camera/timestamp; (3) connected component cho ra các cụm rò rỉ; (4) chia lại theo cụm (bin-packing phân tầng) để Train/Val/Test tách rời hoàn toàn mà vẫn cân bằng lớp.
+Kết quả chính: F1 0,9393, recall 100%, cải thiện +341% so với baseline (0,9393 / 0,2128 ≈ 4,41 lần).
+Chuẩn bị Q&A: nếu đồ thị dùng metadata route/camera/timestamp thì phải nói rõ phần nào của F1 đến từ nội dung ảnh, phần nào từ metadata, vì ground truth cũng được tạo từ metadata.</aside>
+</section>
+
+<section class="slide" id="s4-experiment" data-transition="fade" style="background:#F6F5F1; color:#16213A; font-family:'Be Vietnam Pro', Arial, sans-serif; padding:96px 128px 150px; display:flex; flex-direction:column; gap:24px">
+  <p style="font-size:24px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:#B34A14">Câu 5 · Bằng chứng định lượng</p>
+  <h2 style="font-size:60px; font-weight:700; line-height:1.1; color:#16213A">Điểm trung thực và điểm bị thổi phồng</h2>
+  <p style="font-size:24px; color:#45506A; font-family:'JetBrains Mono', 'Courier New', monospace">Đơn vị: cặp ảnh Train–Val · P = TP/(TP+FP) · R = TP/(TP+FN) · F1 = 2PR/(P+R)</p>
+  <table style="font-size:26px; color:#16213A; font-family:'Be Vietnam Pro', Arial, sans-serif">
+    <tr style="background:#E7E4DB"><th style="width:30%">Phương pháp phát hiện</th><th style="width:12%">Precision</th><th style="width:11%">Recall</th><th style="width:11%">F1</th><th style="width:20%">Rò rỉ còn lại</th><th style="width:16%">Tốc độ</th></tr>
+    <tr><td>Perceptual hash (baseline)</td><td>0,4323</td><td>0,1412</td><td>0,2128</td><td>372 cặp</td><td>388 ảnh/s</td></tr>
+    <tr><td>Deep visual embedding</td><td>0,4246</td><td>0,4881</td><td>0,4541</td><td>221 cặp</td><td>365 ảnh/s</td></tr>
+    <tr style="background:#D5EAE6"><td><b>SplitGuardian (hybrid graph)</b></td><td><b>0,8855</b></td><td><b>1,0000</b></td><td><b>0,9393</b></td><td><b>0 cặp (sạch)</b></td><td><b>250 ảnh/s</b></td></tr>
+  </table>
+  <div style="display:flex; flex-direction:row; gap:32px">
+    <div style="flex:1; display:flex; flex-direction:column; gap:14px; background:#FDFCF9; border:2px solid #B34A14; border-radius:14px; padding:26px 32px">
+      <h3 style="font-size:30px; font-weight:700; color:#B34A14">Leaky split: lộ điểm "đẹp giả"</h3>
+      <div style="display:flex; flex-direction:row; gap:24px">
+        <div style="flex:1; display:flex; flex-direction:column; gap:4px">
+          <p style="font-size:48px; font-weight:700; line-height:1.1">100,0%</p>
+          <p style="font-size:24px; color:#45506A">Validation (quá lạc quan)</p>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:4px">
+          <p style="font-size:48px; font-weight:700; line-height:1.1">94,8%</p>
+          <p style="font-size:24px; color:#45506A">Holdout test</p>
+        </div>
+      </div>
+      <p style="font-size:24px; line-height:1.4; color:#B34A14; font-weight:600">Khoảng cách tổng quát hóa: +5,2 điểm tự tin giả</p>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:14px; background:#FDFCF9; border:2px solid #1F7A6E; border-radius:14px; padding:26px 32px">
+      <h3 style="font-size:30px; font-weight:700; color:#1F7A6E">Clean split: đánh giá trung thực</h3>
+      <div style="display:flex; flex-direction:row; gap:24px">
+        <div style="flex:1; display:flex; flex-direction:column; gap:4px">
+          <p style="font-size:48px; font-weight:700; line-height:1.1">91,2%</p>
+          <p style="font-size:24px; color:#45506A">Validation (phản ánh thật)</p>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:4px">
+          <p style="font-size:48px; font-weight:700; line-height:1.1">97,9%</p>
+          <p style="font-size:24px; color:#45506A">Holdout test</p>
+        </div>
+      </div>
+      <p style="font-size:24px; line-height:1.4; color:#1F7A6E; font-weight:600">Loại bỏ "đẹp giả" mà không làm giảm chất lượng model</p>
+    </div>
+  </div>
+  <div style="position:absolute; left:128px; right:128px; bottom:64px; display:flex; flex-direction:row; justify-content:space-between">
+    <p style="font-size:24px; color:#5B6478">C3 · Leakage &amp; Split Guardian</p>
+    <p style="font-size:24px; color:#5B6478">4 / 5</p>
+  </div>
+  <aside>Đọc bảng từ trên xuống: pHash có recall thấp (14%) và còn 372 cặp rò rỉ; embedding đơn thuần khá hơn (F1 0,45) nhưng còn 221 cặp; SplitGuardian đạt F1 0,9393, recall 100%, không còn cặp rò rỉ nào, đổi lại tốc độ chậm hơn (250 ảnh/s so với 388 ảnh/s).
+Phần quan trọng nhất – giải bẫy của đề: leaky split cho validation 100% nhưng holdout chỉ 94,8%, tức validation đã bị thổi phồng 5,2 điểm. Clean split cho validation thấp hơn (91,2%) nhưng đó là con số trung thực; holdout đạt 97,9%.
+Kết luận: điểm validation thấp hơn sau khi chia sạch không có nghĩa model tệ hơn. Đánh giá trên cùng một holdout độc lập cho thấy clean split đáng tin hơn.
+Chuẩn bị Q&A: holdout chỉ 96 ảnh nên chênh lệch vài điểm phần trăm tương ứng vài ảnh; nên nói rõ số seed đã chạy và độ lệch nếu có.</aside>
+</section>
+
+<section class="slide" id="s5-decision" data-transition="fade" style="background:#16213A; color:#F1EEE6; font-family:'Be Vietnam Pro', Arial, sans-serif; padding:96px 128px 150px; display:flex; flex-direction:column; gap:24px">
+  <p style="font-size:24px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:#F2A65A">Câu 6 · Quyết định production, cổng kiểm tra &amp; đánh đổi</p>
+  <h2 style="font-size:60px; font-weight:700; line-height:1.1; color:#F1EEE6">Quyết định: DEPLOY kèm cổng kiểm tra trong CI/CD</h2>
+  <div style="display:flex; flex-direction:row; gap:24px">
+    <div style="flex:1; display:flex; flex-direction:column; gap:12px; background:#22304F; border:1px solid #3A4A6D; border-top:6px solid #6FC2B4; border-radius:14px; padding:26px">
+      <h3 style="font-size:30px; font-weight:700; color:#6FC2B4">Quyết định: DEPLOY</h3>
+      <p style="font-size:24px; line-height:1.4; color:#C9D1DD">split_guardian_gate.py trong CI/CD: fail build (exit code 1) khi còn cặp rò rỉ hoặc similarity cao nhất vượt ngưỡng.</p>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:12px; background:#22304F; border:1px solid #3A4A6D; border-top:6px solid #F2A65A; border-radius:14px; padding:26px">
+      <h3 style="font-size:30px; font-weight:700; color:#F2A65A">Đánh đổi khi chia lại</h3>
+      <p style="font-size:24px; line-height:1.4; color:#C9D1DD">Cụm burst lớn có thể làm lệch phân bố lớp; bin-packing phân tầng giữ độ lệch dưới 4%. Tập Val nhỏ và dao động hơn.</p>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:12px; background:#22304F; border:1px solid #3A4A6D; border-top:6px solid #8FB3E8; border-radius:14px; padding:26px">
+      <h3 style="font-size:30px; font-weight:700; color:#8FB3E8">Giới hạn &amp; tiếp theo</h3>
+      <p style="font-size:24px; line-height:1.4; color:#C9D1DD">Người kiểm duyệt cặp similarity vùng biên 0,92–0,96. Mở rộng kiểm tra streaming cho đội xe tự hành.</p>
+    </div>
+  </div>
+  <div style="display:flex; flex-direction:column; gap:14px">
+    <p style="font-size:24px; font-weight:600; color:#9AA6BC">Quy trình kiểm tra trước huấn luyện</p>
+    <div style="display:flex; flex-direction:row; gap:14px; align-items:center">
+      <p style="flex:1; font-size:24px; font-weight:600; text-align:center; background:#22304F; border:1px solid #3A4A6D; border-radius:12px; padding:18px 12px; color:#F1EEE6">Manifest dữ liệu</p>
+      <span style="font-size:40px;color:#8A96AD;align-self:center">→</span>
+      <p style="flex:1; font-size:24px; font-weight:600; text-align:center; background:#22304F; border:1px solid #3A4A6D; border-radius:12px; padding:18px 12px; color:#F1EEE6">Kiểm tra chia tập</p>
+      <span style="font-size:40px;color:#8A96AD;align-self:center">→</span>
+      <p style="flex:1; font-size:24px; font-weight:600; text-align:center; background:#22304F; border:1px solid #3A4A6D; border-radius:12px; padding:18px 12px; color:#F1EEE6">Xem xét cảnh báo</p>
+      <span style="font-size:40px;color:#8A96AD;align-self:center">→</span>
+      <p style="flex:1; font-size:24px; font-weight:600; text-align:center; background:#22304F; border:1px solid #3A4A6D; border-radius:12px; padding:18px 12px; color:#F1EEE6">Huấn luyện</p>
+    </div>
+  </div>
+  <p style="font-size:30px; font-weight:600; line-height:1.35; color:#F2A65A">Độ tin cậy của kết quả phụ thuộc vào ranh giới dữ liệu và cách đánh giá, không chỉ con số validation.</p>
+  <div style="position:absolute; left:128px; right:128px; bottom:64px; display:flex; flex-direction:row; justify-content:space-between">
+    <p style="font-size:24px; color:#9AA6BC">C3 · Leakage &amp; Split Guardian</p>
+    <p style="font-size:24px; color:#9AA6BC">5 / 5</p>
+  </div>
+  <aside>Quyết định: DEPLOY dưới dạng cổng kiểm tra dữ liệu trong CI/CD. Script split_guardian_gate.py trả exit code 1 (build fail) khi còn cặp rò rỉ xuyên split hoặc similarity cao nhất vượt ngưỡng chính sách.
+Quy trình: kiểm tra manifest trước huấn luyện; giao thoa scene là lỗi chặn; similarity cao là cảnh báo cần người xem xét, không tự động xóa ảnh chỉ dựa trên điểm embedding.
+Đánh đổi: cụm burst lớn buộc phải nằm trọn một tập nên phân bố lớp có thể lệch; bin-packing phân tầng giữ độ lệch dưới 4%. Chia theo cụm cũng làm tập validation nhỏ hơn và dao động hơn giữa các lần chia.
+Giới hạn và bước tiếp theo: cặp similarity ở vùng biên 0,92–0,96 cần người kiểm duyệt; mở rộng sang kiểm tra streaming cho dữ liệu realtime.
+Tái lập: lưu phiên bản dataset, danh sách scene từng tập, seed, cấu hình bộ dò và báo cáo kiểm tra. Toàn bộ benchmark, CLI, test và web dashboard đều tái lập được; có thể mở dashboard trong phần Q&A (không demo thay cho số liệu).</aside>
+</section>
+
+</div>
+<div id="notes"></div>
+<div id="bar"><span id="num"></span> · ←/→ chuyển slide · N: ghi chú · F: toàn màn hình</div>
+<script>
+const S=[...document.querySelectorAll('.slide')];let i=0;
+function fit(){const k=Math.min(innerWidth/1920,innerHeight/1080);document.getElementById('stage').style.transform=`translate(-50%,-50%) scale(${k})`}
+function show(n){i=(n+S.length)%S.length;S.forEach((s,j)=>s.classList.toggle('active',j===i));document.getElementById('num').textContent=(i+1)+' / '+S.length;const a=S[i].querySelector('aside');document.getElementById('notes').textContent=a?a.textContent:'';}
+addEventListener('keydown',e=>{if(['ArrowRight',' ','PageDown'].includes(e.key))show(i+1);else if(['ArrowLeft','PageUp'].includes(e.key))show(i-1);else if(e.key==='n'||e.key==='N'){const n=document.getElementById('notes');n.style.display=n.style.display==='block'?'none':'block'}else if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}});
+addEventListener('click',e=>{if(e.target.closest('#notes'))return;show(e.clientX<innerWidth/3?i-1:i+1)});
+addEventListener('resize',fit);fit();show(0);
+</script></body></html>
