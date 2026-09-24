@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Topic C3: Leakage & Split Guardian — 5-Slide Showcase</title>
+  <title>Chủ đề C3: Leakage & Split Guardian — Báo Cáo Thuyết Trình 5 Slide</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -209,40 +209,40 @@
     <section class="slide active" id="slide-1">
       <div class="slide-header">
         <div>
-          <div class="slide-tag">Question 1 • Problem Context & Cost of Inaction</div>
-          <h2 class="slide-title">The Silent Production Killer: Cross-Split Data Leakage</h2>
+          <div class="slide-tag">Câu hỏi 1 • Bối Cảnh Bài Toán & Hậu Quả Nếu Bỏ Qua</div>
+          <h2 class="slide-title">"Sát Thủ Vô Hình" Khi Triển Khai: Rò Rỉ Dữ Liệu Xuyên Tập (Cross-Split Leakage)</h2>
         </div>
         <div class="slide-num">01 / 05</div>
       </div>
       <div class="slide-body">
         <div class="grid-2">
           <div class="box" style="border-left: 4px solid var(--rose);">
-            <h4>🚨 Core Pain Point</h4>
-            <p>In real-world computer vision (autonomous driving, traffic analytics, security multi-camera systems), datasets originate from <strong>continuous video bursts, routes, and multi-angle camera rigs</strong>.</p>
+            <h4>🚨 Pain Point Cốt Lõi</h4>
+            <p>Trong các bài toán thị giác máy tính thực tế (xe tự hành, camera giao thông, an ninh đa camera), dữ liệu luôn bắt nguồn từ <strong>chuỗi video liên tục, hành trình di chuyển và giàn camera đa góc nhìn</strong>.</p>
             <br>
-            <p>Traditional random splitting assumes samples are <em>independent and identically distributed (i.i.d.)</em>. In reality, adjacent frames ($t \pm 0.1s$) or multi-camera views of the exact same vehicle are scattered into <strong>both Train and Validation sets</strong>.</p>
+            <p>Phương pháp phân chia ngẫu nhiên truyền thống (Random Split) ngầm giả định các mẫu dữ liệu là <em>độc lập và cùng phân phối (i.i.d.)</em>. Trong thực tế, các khung hình liền kề ($t \pm 0.1s$) hoặc các góc nhìn của cùng một phương tiện bị phân tán vào <strong>cả tập Train lẫn Validation</strong>.</p>
           </div>
           <div class="box" style="border-left: 4px solid var(--amber);">
-            <h4>💸 Who Bears the Consequences?</h4>
+            <h4>💸 Ai Phải Chịu Hậu Quả?</h4>
             <ul>
-              <li><strong>ML Engineers:</strong> Suffer from <em>"False Confidence"</em> (Validation score is "đẹp giả" at 96-98%), believing the model generalizes.</li>
-              <li><strong>Product & Operations:</strong> Deploy model to production and suffer severe 20-40% performance degradation on unseen routes/cameras.</li>
-              <li><strong>Business & Safety:</strong> Massive GPU retraining re-runs, delayed vehicle releases, and catastrophic false-negative safety risks in real-world driving.</li>
+              <li><strong>Kỹ sư ML (ML Engineers):</strong> Rơi vào bẫy <em>"Ảo tưởng năng lực"</em> (Validation metric "đẹp giả" 96-98%), lầm tưởng mô hình đã học được tính tổng quát.</li>
+              <li><strong>Vận hành & Sản phẩm (Product & Ops):</strong> Khi đưa vào thực tế, hiệu năng sụt giảm nghiêm trọng từ 20-40% trên các cung đường và góc camera mới.</li>
+              <li><strong>Doanh nghiệp & An toàn:</strong> Lãng phí hàng trăm giờ GPU đào tạo lại, chậm trễ ra mắt và nguy cơ tai nạn nghiêm trọng trong các hệ thống an toàn sinh mạng (ADAS).</li>
             </ul>
           </div>
         </div>
         <div class="grid-3">
           <div class="box stat-hero">
             <div class="val text-rose">434</div>
-            <div class="lbl">Cross-Split Leaks in Naive Random Split</div>
+            <div class="lbl">Cặp Rò Rỉ Khi Chia Ngẫu Nhiên (Naive Split)</div>
           </div>
           <div class="box stat-hero">
             <div class="val text-amber">1.0000</div>
-            <div class="lbl">Max Cross-Split Cosine Similarity</div>
+            <div class="lbl">Cosine Similarity Lớn Nhất Xuyên Tập</div>
           </div>
           <div class="box stat-hero">
-            <div class="val text-cyan">2 Types</div>
-            <div class="lbl">Temporal Burst & Multi-Camera Overlap</div>
+            <div class="val text-cyan">2 Dạng</div>
+            <div class="lbl">Chuỗi Thời Gian (Burst) & Đa Góc Camera (Multi-Cam)</div>
           </div>
         </div>
       </div>
@@ -252,29 +252,29 @@
     <section class="slide" id="slide-2">
       <div class="slide-header">
         <div>
-          <div class="slide-tag">Question 2 • Failure Reproduction & Benchmark Design</div>
-          <h2 class="slide-title">Dual-Leakage Benchmark with Ground Truth Manifest</h2>
+          <div class="slide-tag">Câu hỏi 2 • Tái Hiện Lỗi & Thiết Kế Bộ Benchmark</div>
+          <h2 class="slide-title">Bộ Benchmark Tái Hiện 2 Dạng Rò Rỉ Kèm Ground Truth Chuẩn</h2>
         </div>
         <div class="slide-num">02 / 05</div>
       </div>
       <div class="slide-body">
         <div class="grid-2">
           <div class="box">
-            <h4>🎬 Leakage Type 1: Temporal Burst Overlap</h4>
-            <p>High-frequency sequential video frames ($150\text{ ms}$ delta) captured by the same camera lens.</p>
+            <h4>🎬 Dạng Rò Rỉ 1: Trùng Lặp Chuỗi Thời Gian (Temporal Burst)</h4>
+            <p>Các khung hình video chụp liên tiếp tần số cao (chênh lệch chỉ $150\text{ ms}$) từ cùng một góc camera.</p>
             <br>
-            <p><strong>Failure Mechanism:</strong> Differing only by minor pixel jitter or slight translation. A naive random split places frame $f_0$ in Train and frame $f_1$ in Val, letting the model memorize the vehicle rather than learning general features.</p>
+            <p><strong>Cơ chế gây lỗi:</strong> Chỉ khác biệt nhỏ do rung lắc pixel hoặc dịch chuyển vi mô. Phân chia ngẫu nhiên đẩy khung hình $f_0$ vào Train và $f_1$ vào Val khiến mô hình học vẹt (ghi nhớ mẫu) thay vì học đặc trưng tổng quát.</p>
           </div>
           <div class="box">
-            <h4>🎥 Leakage Type 2: Multi-Camera Viewpoint Overlap</h4>
-            <p>Synchronous capture of the identical traffic event from multiple vantage points (e.g. <code>cam_front_left</code> vs <code>cam_front_right</code>).</p>
+            <h4>🎥 Dạng Rò Rỉ 2: Trùng Lặp Góc Nhìn Đa Camera (Multi-Camera)</h4>
+            <p>Ghi hình đồng thời cùng một sự kiện giao thông từ nhiều góc máy quan sát (ví dụ: <code>cam_front_left</code> đối xứng <code>cam_front_right</code>).</p>
             <br>
-            <p><strong>Failure Mechanism:</strong> Differing by perspective warp and lighting tints. Baseline pixel/pHash methods completely miss these leaks due to high bit Hamming distance!</p>
+            <p><strong>Cơ chế gây lỗi:</strong> Khác biệt về phối cảnh và sắc độ ánh sáng. Các phương pháp cơ bản như so khớp pixel hay pHash hoàn toàn bỏ sót các rò rỉ này do khoảng cách bit Hamming quá lớn!</p>
           </div>
         </div>
         <div class="box">
-          <h4>📐 Independent Holdout Protocol</h4>
-          <p>We reserve <strong>Scenes 14 through 17</strong> as a strict <em>Unseen Holdout Test Set</em> with 96 captures. This provides an indisputable ground truth benchmark to test whether validation metrics are genuine or "đẹp giả".</p>
+          <h4>📐 Quy Chuẩn Tập Kiểm Thử Độc Lập (Holdout Test Protocol)</h4>
+          <p>Chúng tôi dành riêng <strong>Scene 14 đến Scene 17</strong> làm <em>Tập Kiểm Thử Độc Lập Hoàn Toàn (Holdout Test Set)</em> với 96 khung hình chưa từng thấy. Đây là thước đo khách quan để kiểm chứng xem điểm số validation phản ánh thực chất hay chỉ là "đẹp giả".</p>
         </div>
       </div>
     </section>
@@ -283,33 +283,33 @@
     <section class="slide" id="slide-3">
       <div class="slide-header">
         <div>
-          <div class="slide-tag">Questions 3 & 4 • Baseline Failure & SplitGuardian Solution</div>
-          <h2 class="slide-title">Architecture: Hybrid Multimodal Graph Guardian</h2>
+          <div class="slide-tag">Câu hỏi 3 & 4 • Thất Bại Của Baseline & Giải Pháp SplitGuardian</div>
+          <h2 class="slide-title">Kiến Trúc Đề Xuất: Hybrid Multimodal Graph Guardian</h2>
         </div>
         <div class="slide-num">03 / 05</div>
       </div>
       <div class="slide-body">
         <div class="grid-2">
           <div class="box" style="border-left: 4px solid var(--rose);">
-            <h4>❌ Why Baselines Fail</h4>
+            <h4>❌ Vì Sao Các Phương Pháp Cơ Bản (Baseline) Thất Bại</h4>
             <ul>
-              <li><strong>Baseline 1 (Random Split):</strong> Completely blind to temporal or spatial dependencies. Generates 434 leaked pairs.</li>
-              <li><strong>Baseline 2 (Perceptual Hash):</strong> Catches exact duplicates, but fails on multi-camera angles (Recall = 14.1%, F1 = 0.2128).</li>
+              <li><strong>Baseline 1 (Random Split):</strong> Hoàn toàn mù quáng trước mối quan hệ thời gian và không gian; tạo ra 434 cặp rò rỉ xuyên tập.</li>
+              <li><strong>Baseline 2 (Perceptual Hash):</strong> Chỉ phát hiện được ảnh trùng lặp nguyên bản, bỏ sót hầu như toàn bộ góc máy đa camera (Recall = 14.1%, F1 = 0.2128).</li>
             </ul>
           </div>
           <div class="box" style="border-left: 4px solid var(--emerald);">
-            <h4>✨ SplitGuardian Solution Architecture</h4>
+            <h4>✨ Kiến Trúc Giải Pháp Toàn Diện Của SplitGuardian</h4>
             <ul>
-              <li><strong>Multi-tier Feature Extraction:</strong> Combines dHash + 256-D zero-mean normalized deep CNN embeddings.</li>
-              <li><strong>Spatiotemporal Affinity Graph:</strong> Fuses visual similarity with route/camera/timestamp metadata constraints.</li>
-              <li><strong>Connected Component Partition:</strong> Discovers atomic leakage clusters.</li>
-              <li><strong>Stratified Group Re-Splitter:</strong> Bin-packs whole clusters to keep splits 100% disjoint while preserving class balance.</li>
+              <li><strong>Trích xuất đặc trưng đa tầng:</strong> Kết hợp dHash và vector đặc trưng Deep CNN 256 chiều được chuẩn hóa zero-mean.</li>
+              <li><strong>Đồ thị tương đồng Không-Thời gian:</strong> Dung hợp độ tương đồng thị giác cùng ràng buộc metadata (tuyến đường / camera / timestamp).</li>
+              <li><strong>Phân cụm thành phần liên thông:</strong> Tự động gom các mẫu phụ thuộc thành các "Cụm rò rỉ nguyên tử" (Atomic Clusters).</li>
+              <li><strong>Tái phân chia phân tầng theo nhóm:</strong> Đóng gói nguyên cụm (Greedy Bin-packing) để đảm bảo 100% không rò rỉ mà vẫn giữ cân bằng phân phối nhãn.</li>
             </ul>
           </div>
         </div>
         <div class="box stat-hero" style="background: rgba(99, 102, 241, 0.1);">
           <div class="val text-emerald">F1: 0.9393 (100% Recall)</div>
-          <div class="lbl">SplitGuardian Primary Metric vs Baseline 0.2128 (+341% Improvement)</div>
+          <div class="lbl">Chỉ Số Cốt Lõi SplitGuardian Đạt Được so với Baseline 0.2128 (Tăng +341%)</div>
         </div>
       </div>
     </section>
@@ -318,8 +318,8 @@
     <section class="slide" id="slide-4">
       <div class="slide-header">
         <div>
-          <div class="slide-tag">Question 5 • Quantitative Evidence & Proof of "Đẹp Giả"</div>
-          <h2 class="slide-title">Empirical Evidence: Honest vs Artificially Inflated Metric</h2>
+          <div class="slide-tag">Câu hỏi 5 • Bằng Chứng Định Lượng & Vạch Trần "Đẹp Giả"</div>
+          <h2 class="slide-title">Bằng Chứng Thực Nghiệm: Đánh Giá Trung Thực vs Con Số Thổi Phồng</h2>
         </div>
         <div class="slide-num">04 / 05</div>
       </div>
@@ -327,12 +327,12 @@
         <table class="slide-table">
           <thead>
             <tr>
-              <th>Detection Method</th>
-              <th>Precision</th>
-              <th>Recall</th>
-              <th>F1 Score</th>
-              <th>Cross Leaks Left</th>
-              <th>Throughput</th>
+              <th>Phương Pháp Phát Hiện</th>
+              <th>Độ Chính Xác (Precision)</th>
+              <th>Độ Bao Phủ (Recall)</th>
+              <th>F1-Score</th>
+              <th>Rò Rỉ Còn Lại</th>
+              <th>Tốc Độ (Throughput)</th>
             </tr>
           </thead>
           <tbody>
@@ -341,40 +341,40 @@
               <td>0.4323</td>
               <td>0.1412</td>
               <td>0.2128</td>
-              <td>372 pairs</td>
-              <td>388 img/s</td>
+              <td>372 cặp</td>
+              <td>388 ảnh/s</td>
             </tr>
             <tr>
               <td>Deep Visual Embeddings</td>
               <td>0.4246</td>
               <td>0.4881</td>
               <td>0.4541</td>
-              <td>221 pairs</td>
-              <td>365 img/s</td>
+              <td>221 cặp</td>
+              <td>365 ảnh/s</td>
             </tr>
             <tr style="background: rgba(16, 185, 129, 0.15); font-weight: 700;">
               <td>⭐ SplitGuardian (Hybrid Graph)</td>
               <td>0.8855</td>
               <td>1.0000</td>
               <td>0.9393</td>
-              <td>0 pairs (Clean)</td>
-              <td>250 img/s</td>
+              <td>0 cặp (Sạch 100%)</td>
+              <td>250 ảnh/s</td>
             </tr>
           </tbody>
         </table>
 
         <div class="grid-2">
           <div class="box" style="border: 1px solid var(--rose);">
-            <h4>🔴 Leaky Split: "Đẹp Giả" Exposed</h4>
-            <p>• Validation Acc: <strong>100.0%</strong> (Over-optimistic)</p>
-            <p>• Holdout Test Acc: <strong>94.8%</strong></p>
-            <p>• Generalization Gap: <strong>+5.2% false confidence</strong></p>
+            <h4>🔴 Tập Chia Bị Rò Rỉ: Vạch Trần Hiện Tượng "Đẹp Giả"</h4>
+            <p>• Accuracy Validation: <strong>100.0%</strong> (Lạc quan ảo tưởng)</p>
+            <p>• Accuracy Holdout Test: <strong>94.8%</strong></p>
+            <p>• Khoảng cách tổng quát hóa (Generalization Gap): <strong>Lệch +5.2% ảo tưởng năng lực</strong></p>
           </div>
           <div class="box" style="border: 1px solid var(--emerald);">
-            <h4>🟢 SplitGuardian Clean Split: Honest Evaluation</h4>
-            <p>• Validation Acc: <strong>91.2%</strong> (Reflects true generalization)</p>
-            <p>• Holdout Test Acc: <strong>97.9%</strong> (Production ready)</p>
-            <p>• Verification: Eliminates "đẹp giả" without losing model quality!</p>
+            <h4>🟢 Tập Chia Sạch Của SplitGuardian: Đánh Giá Thực Chất</h4>
+            <p>• Accuracy Validation: <strong>91.2%</strong> (Phản ánh đúng năng lực thực tế)</p>
+            <p>• Accuracy Holdout Test: <strong>97.9%</strong> (Sẵn sàng triển khai thực tế)</p>
+            <p>• Kiểm chứng: Xóa bỏ triệt để "đẹp giả" mà vẫn giữ vững chất lượng huấn luyện mô hình!</p>
           </div>
         </div>
       </div>
@@ -384,39 +384,39 @@
     <section class="slide" id="slide-5">
       <div class="slide-header">
         <div>
-          <div class="slide-tag">Question 6 • Production Decision, Gate & Trade-offs</div>
-          <h2 class="slide-title">Production Decision: DEPLOY with CI/CD Security Gate</h2>
+          <div class="slide-tag">Câu hỏi 6 • Quyết Định Triển Khai, Cổng Kiểm Soát & Đánh Đổi</div>
+          <h2 class="slide-title">Quyết Định Triển Khai: DEPLOY Kèm Cổng Kiểm Soát An Toàn CI/CD</h2>
         </div>
         <div class="slide-num">05 / 05</div>
       </div>
       <div class="slide-body">
         <div class="grid-3">
           <div class="box" style="border-top: 4px solid var(--emerald);">
-            <h4>✅ Decision: DEPLOY</h4>
-            <p>Integrated into ML CI/CD pipeline via <code>split_guardian_gate.py</code>.</p>
+            <h4>✅ Quyết Định: DEPLOY</h4>
+            <p>Tích hợp trực tiếp vào quy trình CI/CD của hệ thống ML thông qua công cụ dòng lệnh <code>split_guardian_gate.py</code>.</p>
             <br>
-            <p>Automatically fails builds (Exit Code 1) if cross-split leaks > 0 or max similarity exceeds policy threshold.</p>
+            <p>Tự động chặn quy trình build (Exit Code 1) nếu phát hiện rò rỉ xuyên tập (> 0) hoặc độ tương đồng tối đa vượt ngưỡng an toàn cho phép.</p>
           </div>
           <div class="box" style="border-top: 4px solid var(--amber);">
-            <h4>⚖️ Re-Split Trade-offs</h4>
-            <p><strong>Granularity vs Balance:</strong> In small datasets, large burst clusters can cause minor class distribution skew.</p>
+            <h4>⚖️ Đánh Đổi Khi Tái Phân Chia (Re-Split)</h4>
+            <p><strong>Độ mịn vs Cân bằng dữ liệu:</strong> Với tập dữ liệu nhỏ, các cụm chuỗi video lớn có thể làm lệch nhẹ tỷ lệ các lớp.</p>
             <br>
-            <p>SplitGuardian's greedy stratified bin-packing limits class distribution deviation to under 4%.</p>
+            <p>Cơ chế phân tầng greedy bin-packing của SplitGuardian kiểm soát độ lệch phân phối nhãn luôn ở mức an toàn dưới 4%.</p>
           </div>
           <div class="box" style="border-top: 4px solid var(--cyan);">
-            <h4>🚀 Next Steps & Limits</h4>
-            <p>• Human-in-the-loop audit for borderline similarity pairs ($0.92-0.96$).</p>
+            <h4>🚀 Giới Hạn & Kế Hoạch Tiếp Theo</h4>
+            <p>• Bổ sung quy trình rà soát người dùng (Human-in-the-loop) với các cặp có độ tương đồng cận biên ($0.92 - 0.96$).</p>
             <br>
-            <p>• Streaming integration for real-time edge ingestion in autonomous drive fleets.</p>
+            <p>• Mở rộng hỗ trợ kiến trúc luồng dữ liệu thời gian thực (streaming ingestion) cho các đội xe tự hành quy mô lớn.</p>
           </div>
         </div>
 
         <div class="box" style="display: flex; justify-content: space-between; align-items: center;">
           <div>
-            <strong>Interactive Visualizer & Source Code Ready</strong>
-            <p style="font-size: 12.5px;">All benchmarks, CLI tools, tests, and web dashboard 100% reproducible.</p>
+            <strong>Sẵn Sàng Trực Quan Hóa Tương Tác & Mã Nguồn Đầy Đủ</strong>
+            <p style="font-size: 12.5px;">Toàn bộ benchmark, công cụ CLI, kiểm thử và dashboard web có khả năng tái lập 100%.</p>
           </div>
-          <a href="../web_dashboard/index.html" class="btn-nav" style="text-decoration: none;">Launch Web Dashboard ↗</a>
+          <a href="../leakage-split-guardian/web_dashboard/index.html" class="btn-nav" style="text-decoration: none;">Mở Web Dashboard ↗</a>
         </div>
       </div>
     </section>
@@ -424,11 +424,11 @@
 
   <!-- Deck Navigation Controls -->
   <div class="deck-nav">
-    <button class="btn-nav" id="prevSlideBtn">← Previous Slide</button>
+    <button class="btn-nav" id="prevSlideBtn">← Slide Trước</button>
     <div class="progress-bar-container">
       <div class="progress-bar" id="progressBar"></div>
     </div>
-    <button class="btn-nav" id="nextSlideBtn">Next Slide →</button>
+    <button class="btn-nav" id="nextSlideBtn">Slide Tiếp →</button>
   </div>
 
   <script>

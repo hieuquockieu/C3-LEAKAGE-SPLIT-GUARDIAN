@@ -1,6 +1,6 @@
-# Topic C3: Leakage & Split Guardian — 5-Slide Showcase
+# Chủ Đề C3: Leakage & Split Guardian — Báo Cáo Thuyết Trình 5 Slide
 
-## Slide 1: Pain Point Cụ Thể & Hậu Quả (Question 1)
+## Slide 1: Bối Cảnh Bài Toán, Pain Point Cụ Thể & Hậu Quả (Question 1)
 - **Pain point cụ thể:**
   - Trong các bài toán thị giác máy tính thực tế (xe tự hành, camera giao thông, giám sát an ninh), dữ liệu luôn thu thập theo chuỗi thời gian (video sequences), chụp liên tiếp (frame bursts), hoặc hệ thống nhiều góc nhìn (multi-camera rig).
   - Khi áp dụng phân chia ngẫu nhiên (Naive Random Split), các khung hình liền kề ($t \pm 0.1s$) hoặc góc nhìn đối diện của cùng một phương tiện/sự kiện bị xáo trộn vào cả tập Train và Validation.
